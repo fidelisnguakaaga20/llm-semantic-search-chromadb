@@ -1,0 +1,6 @@
+Day 1: Python basics (variables, lists, dicts, functions)
+Day 2: File handling + Jupyter
+Day 3: Practice exercises
+Day 4: Mini project (study tracker)
+Day 5: Review + HuggingFace preview
+Extra: Build 1 small LLM tool every week.
