@@ -1,56 +1,26 @@
-"""
-07_fastapi_rag_api.py
+# 07_fastapi_rag_api.py
+# FastAPI backend for Resume RAG (Week 7–8)
 
-Week 7 of the LLM roadmap:
-FastAPI backend with routes:
-
-- GET  /health
-- POST /embed   -> return embeddings for given texts
-- POST /search  -> semantic search over resume chunks
-- POST /rag     -> simple RAG answer (best chunk)
-- POST /chat    -> free-form chat using gpt2 (stateless)
-- POST /agent   -> simple "agent" that decides when to use resume search
-
-We reuse the existing vector DB created by 06_langchain_resume_rag.py:
-
-- chroma_db_langchain_resume/   (persistent Chroma directory)
-- collection name: "langchain"
-"""
-
-import os
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-
-from sentence_transformers import SentenceTransformer
 import chromadb
 from chromadb.config import Settings
-from pypdf import PdfReader
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
 from transformers import pipeline
 
-# Force HuggingFace to run OFFLINE (use local cache only)
-os.environ["HF_HUB_OFFLINE"] = "1"
+# ---------- Config ----------
 
-
-# -------------------- Paths & constants --------------------
-
-BASE_DIR = Path(__file__).resolve().parent
-PDF_PATH = BASE_DIR / "data" / "sample.pdf"  # only for reference if needed
-
-# IMPORTANT: reuse the LangChain Chroma DB already built
-CHROMA_DIR = BASE_DIR / "chroma_db_langchain_resume"
-CHROMA_COLLECTION_NAME = "langchain"  # LangChain default
-
+BASE_DIR = Path(__file__).parent
+CHROMA_DIR = BASE_DIR / "chroma_db_langchain_resume"  # already created by LangChain script
 EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+LLM_MODEL_NAME = "gpt2"
 
 
-# -------------------- Models for requests --------------------
-
-class EmbedRequest(BaseModel):
-    texts: List[str]
-
+# ---------- Request / Response models ----------
 
 class SearchRequest(BaseModel):
     query: str
@@ -62,239 +32,133 @@ class RagRequest(BaseModel):
     top_k: int = 3
 
 
-class ChatMessage(BaseModel):
-    role: str  # "user" or "assistant"
-    content: str
+class ChunkResult(BaseModel):
+    text: str
+    distance: float
 
 
-class ChatRequest(BaseModel):
-    messages: List[ChatMessage]
+class RagResponse(BaseModel):
+    answer: str
+    context: List[ChunkResult]
 
 
-class AgentRequest(BaseModel):
-    question: str
+# ---------- App ----------
 
+app = FastAPI(title="Resume RAG API", version="0.1.0")
 
-# -------------------- Global objects (loaded once) --------------------
+# CORS so the Next.js frontend (http://localhost:3000) can call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],   # includes OPTIONS so preflight does not 405
+    allow_headers=["*"],
+)
 
-app = FastAPI(title="Resume RAG API")
-
+# Global objects initialised at startup
 embed_model: SentenceTransformer | None = None
-chroma_client = None
-chroma_collection = None
-chat_llm = None  # gpt2 pipeline
+chroma_client: Any = None
+chroma_collection: Any = None
+llm_pipe: Any = None
 
 
-# -------------------- Utility functions --------------------
-
-def load_pdf_text(pdf_path: Path) -> str:
-    """Not used in the API logic, kept for reference."""
-    if not pdf_path.exists():
-        raise FileNotFoundError(f"PDF not found at {pdf_path}")
-    reader = PdfReader(str(pdf_path))
-    text_parts = []
-    for page in reader.pages:
-        text_parts.append(page.extract_text() or "")
-    full_text = "\n".join(text_parts)
-    return full_text
-
-
-def init_embed_model():
-    global embed_model
-    if embed_model is None:
-        print("[EMBED] Loading SentenceTransformer model (offline):", EMBED_MODEL_NAME)
-        embed_model = SentenceTransformer(EMBED_MODEL_NAME)
-
-
-def init_chroma():
-    """
-    Initialize Chroma client + collection by reusing the existing DB
-    built earlier by 06_langchain_resume_rag.py.
-    """
-    global chroma_client, chroma_collection
-
-    if chroma_client is None:
-        print("[CHROMA] Initializing persistent client at:", CHROMA_DIR)
-        chroma_client = chromadb.PersistentClient(
-            path=str(CHROMA_DIR),
-            settings=Settings(allow_reset=True),
-        )
-
-    try:
-        chroma_collection = chroma_client.get_collection(CHROMA_COLLECTION_NAME)
-        count = chroma_collection.count()
-        print(f"[CHROMA] Loaded collection '{CHROMA_COLLECTION_NAME}' with {count} records.")
-        if count == 0:
-            print(
-                "[CHROMA] WARNING: collection is empty. "
-                "Run 06_langchain_resume_rag.py once to build it."
-            )
-    except Exception as e:
-        raise RuntimeError(
-            f"[CHROMA] Could not load collection '{CHROMA_COLLECTION_NAME}' "
-            f"from {CHROMA_DIR}. Make sure 06_langchain_resume_rag.py has been run."
-        ) from e
-
-
-def init_chat_llm():
-    global chat_llm
-    if chat_llm is None:
-        print("[LLM] Loading gpt2 for chat...")
-        chat_llm = pipeline(
-            "text-generation",
-            model="gpt2",
-            max_new_tokens=128,
-            do_sample=True,
-            temperature=0.7,
-        )
-
-
-def resume_search(query: str, top_k: int = 3):
-    """Semantic search over resume chunks."""
-    if chroma_collection is None:
-        raise RuntimeError("Chroma collection not initialized")
-
-    init_embed_model()
-    q_emb = embed_model.encode([query], convert_to_numpy=True)[0].tolist()
-    results = chroma_collection.query(
-        query_embeddings=[q_emb],
-        n_results=top_k,
-    )
-    docs = results.get("documents", [[]])[0]
-    distances = results.get("distances", [[]])[0]
-    return docs, distances
-
-
-def should_use_resume_tool(question: str) -> bool:
-    q = question.lower()
-    keywords = [
-        "resume",
-        "cv",
-        "my skills",
-        "my experience",
-        "my projects",
-        "my education",
-        "according to my resume",
-    ]
-    return any(k in q for k in keywords)
-
-
-# -------------------- FastAPI lifecycle --------------------
+# ---------- Startup ----------
 
 @app.on_event("startup")
-def on_startup():
+def on_startup() -> None:
+    global embed_model, chroma_client, chroma_collection, llm_pipe
+
     print("[STARTUP] Initializing embed model + Chroma + LLM...")
-    init_embed_model()
-    init_chroma()
-    init_chat_llm()
+
+    # Embedding model
+    embed_model = SentenceTransformer(EMBED_MODEL_NAME)
+    print("[EMBED] Model loaded:", EMBED_MODEL_NAME)
+
+    # Chroma client / collection (already persisted from previous scripts)
+    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+    chroma_client = chromadb.PersistentClient(
+        path=str(CHROMA_DIR),
+        settings=Settings(anonymized_telemetry=False),
+    )
+    chroma_collection = chroma_client.get_or_create_collection("langchain")
+    count = chroma_collection.count()
+    print(f"[CHROMA] Loaded collection 'langchain' with {count} records.")
+
+    # LLM for answer generation (small local gpt2)
+    print("[LLM] Loading gpt2 for chat...")
+    llm_pipe = pipeline("text-generation", model=LLM_MODEL_NAME, device=-1)
+
     print("[STARTUP] Ready. Resume RAG API is initialized.")
 
 
-# -------------------- Endpoints --------------------
+# ---------- Helpers ----------
+
+def _search_chunks(query: str, top_k: int = 3) -> List[ChunkResult]:
+    if embed_model is None or chroma_collection is None:
+        raise RuntimeError("Models not initialized")
+
+    query_emb = embed_model.encode([query]).tolist()
+    results = chroma_collection.query(
+        query_embeddings=query_emb,
+        n_results=top_k,
+    )
+
+    docs = results.get("documents", [[]])[0]
+    dists = results.get("distances", [[]])[0]
+
+    return [
+        ChunkResult(text=text, distance=float(dist))
+        for text, dist in zip(docs, dists)
+    ]
+
+
+# ---------- Routes ----------
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "detail": "Resume RAG API running"}
-
-
-@app.post("/embed")
-def embed_texts(payload: EmbedRequest):
-    if not payload.texts:
-        raise HTTPException(status_code=400, detail="texts list cannot be empty")
-
-    init_embed_model()
-    vectors = embed_model.encode(payload.texts, convert_to_numpy=True)
-    return {"embeddings": vectors.tolist()}
+def health():
+    return {"status": "ok"}
 
 
 @app.post("/search")
-def semantic_search(payload: SearchRequest):
-    docs, distances = resume_search(payload.query, top_k=payload.top_k)
-    results = []
-    for doc, dist in zip(docs, distances):
-        results.append({"text": doc, "distance": float(dist)})
-    return {"results": results}
+def search(req: SearchRequest):
+    try:
+        chunks = _search_chunks(req.query, req.top_k)
+        return {"results": [c.model_dump() for c in chunks]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/rag")
-def rag_answer(payload: RagRequest):
-    docs, distances = resume_search(payload.question, top_k=payload.top_k)
-    if not docs:
-        return {"answer": "No information found in resume.", "context": []}
-
-    best_doc = docs[0]
-    ctx = []
-    for doc, dist in zip(docs, distances):
-        ctx.append({"text": doc, "distance": float(dist)})
-
-    return {
-        "answer": best_doc,
-        "context": ctx,
-    }
-
-
-@app.post("/chat")
-def chat(payload: ChatRequest):
-    if not payload.messages:
-        raise HTTPException(status_code=400, detail="messages list cannot be empty")
-
-    init_chat_llm()
-
-    conv_text = ""
-    for m in payload.messages:
-        role = m.role.upper()
-        conv_text += f"{role}: {m.content}\n"
-    conv_text += "ASSISTANT:"
-
-    out = chat_llm(conv_text)[0]["generated_text"]
-    last_idx = out.rfind("ASSISTANT:")
-    if last_idx != -1:
-        answer = out[last_idx + len("ASSISTANT:"):].strip()
-    else:
-        answer = out.strip()
-
-    return {"answer": answer}
-
-
-@app.post("/agent")
-def agent(payload: AgentRequest):
+@app.post("/rag", response_model=RagResponse)
+def answer_rag(req: RagRequest):
     """
-    Simple "agent":
-
-    - If question is about resume/skills, call resume_search TOOL.
-    - Otherwise, just do a free-form chat completion.
+    RAG endpoint used by both Swagger and the Next.js frontend.
     """
-    question = payload.question.strip()
-    if not question:
-        raise HTTPException(status_code=400, detail="question cannot be empty")
+    try:
+        chunks = _search_chunks(req.question, req.top_k)
 
-    if should_use_resume_tool(question):
-        docs, distances = resume_search(question, top_k=3)
-        if not docs:
-            tool_answer = "I could not find anything in your resume related to that question."
-        else:
-            tool_answer = (
-                "Based on your resume, here are the most relevant parts:\n\n"
-                + "\n\n".join(docs)
-            )
-        return {
-            "mode": "resume_tool",
-            "answer": tool_answer,
-        }
+        # Build context string from top chunks
+        context_text = "\n\n".join(c.text for c in chunks)
 
-    init_chat_llm()
-    prompt = (
-        "You are helping Nguakaaga think about their LLM engineering career.\n\n"
-        f"USER: {question}\n\nASSISTANT:"
-    )
-    out = chat_llm(prompt)[0]["generated_text"]
-    last_idx = out.rfind("ASSISTANT:")
-    if last_idx != -1:
-        answer = out[last_idx + len("ASSISTANT:"):].strip()
-    else:
-        answer = out.strip()
+        # Simple prompt for tiny gpt2 (keep short)
+        prompt = (
+            "You are reading my resume text and answering a question about it.\n\n"
+            f"RESUME CONTEXT:\n{context_text}\n\n"
+            f"QUESTION: {req.question}\n"
+            "ANSWER (short and clear):"
+        )
 
-    return {
-        "mode": "chat",
-        "answer": answer,
-    }
+        raw = llm_pipe(prompt, max_length=256, num_return_sequences=1)[0]["generated_text"]
+        answer = raw.split("ANSWER (short and clear):", 1)[-1].strip()
+
+        if not answer:
+            answer = chunks[0].text if chunks else "No answer found."
+
+        return RagResponse(
+            answer=answer,
+            context=chunks,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

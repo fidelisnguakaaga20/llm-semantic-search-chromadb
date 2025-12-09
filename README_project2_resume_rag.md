@@ -1,82 +1,155 @@
-# Project 2 – Resume RAG API (FastAPI + ChromaDB)
+Resume RAG API — Project Documentation
 
-Small backend API that performs semantic search and simple RAG over my **resume PDF**.
+By Nguakaaga Mvendaga
+LLM Engineering Roadmap — Project 2
 
-## Tech Stack
+🚀 Overview
 
-- Python 3.11
-- FastAPI + Uvicorn
-- SentenceTransformers – `sentence-transformers/all-MiniLM-L6-v2`
-- ChromaDB (local persistent DB)
-- LangChain (for earlier CLI RAG script)
-- PDF parsing: `pypdf`
+This project implements a full Retrieval-Augmented Generation backend that processes a resume PDF, stores chunks inside a vector database, and exposes an API for:
 
-## Files
+Embeddings
 
-- `data/sample.pdf` – resume used as RAG source
-- `data/05_rag_pdf_basic.py` – basic PDF → chunks → Chroma → CLI Q&A
-- `06_langchain_resume_rag.py` – LangChain RAG over resume (terminal)
-- `07_fastapi_resume_api.py` – FastAPI app exposing RAG endpoints
+Semantic search
 
-## How to Run
+RAG answers
 
-```bash
-cd C:\Users\HP\Desktop\llm-roadmap
-.\.venv\Scripts\activate
+Chat (GPT-2 local)
 
-# Start the FastAPI server
-uvicorn 07_fastapi_resume_api:app --reload
+Agent with tool-calling logic
 
+It follows Weeks 5–7 of the Master LLM Engineering Roadmap.
 
+🧠 Features
+✅ PDF Processing
 
-Then open:
+PDF text extraction using pypdf
 
-Swagger UI: http://127.0.0.1:8000/docs
+Chunking with overlap for better retrieval
 
-Health check: http://127.0.0.1:8000/health
+✅ Embeddings
 
-Endpoints
+SentenceTransformer: all-MiniLM-L6-v2
+
+Offline loading fallback
+
+Generates resume/skill embeddings
+
+✅ Vector Database (ChromaDB)
+
+Persistent DB on disk
+
+Stores every resume chunk
+
+Fast similarity search
+
+✅ RAG Pipeline
+
+Given a question:
+
+Embed the query
+
+Search the resume vector DB
+
+Return best chunk + full context
+
+✅ Chat
+
+Uses GPT-2 pipeline
+
+Full chat role formatting
+
+Stateless conversation
+
+✅ Agent
+
+Decides whether to:
+
+Use the resume search tool
+
+Or answer normally using GPT-2
+
+Triggers when user asks:
+
+“my resume”,
+
+“my experience”,
+
+“my skills”, etc.
+
+🏗 API Endpoints
+GET /health
+
+Check if API is running.
+
+POST /embed
+
+Generate embeddings for a list of texts.
+
 POST /search
 
 Semantic search over resume chunks.
 
-Request body
-
-{
-  "query": "What tech stack do I use in my projects?",
-  "k": 3
-}
-
-
-Response (shape)
-
-{
-  "query": "What tech stack do I use in my projects?",
-  "results": [
-    { "text": "...chunk text...", "distance": 1.23 },
-    { "text": "...", "distance": 1.45 }
-  ]
-}
-
 POST /rag
 
-Simple RAG: retrieve and return the best chunk as the “answer”.
+RAG answer using best chunk(s).
 
-Request body
+POST /chat
 
-{
-  "question": "What tech stack do I use in my projects?",
-  "k": 3
-}
+Free-form chat using GPT-2.
+
+POST /agent
+
+Routes intelligently between:
+
+Resume search tool
+
+Or normal chat
+
+📂 File Structure
+llm-roadmap/
+│
+├── 07_fastapi_rag_api.py
+├── data/sample.pdf
+├── chroma_db_resume_api/
+├── chroma_db_langchain_resume/
+└── README_project2_resume_rag.md
+
+▶️ How to Run
+
+Terminal:
+
+cd ~/Desktop/llm-roadmap
+.\.venv\Scripts\activate
+uvicorn 07_fastapi_rag_api:app --reload
 
 
-Response (shape)
+Open Swagger UI:
 
-{
-  "question": "What tech stack do I use in my projects?",
-  "answer": "...best chunk text...",
-  "context": [
-    { "text": "...chunk 1...", "distance": 1.23 },
-    { "text": "...chunk 2...", "distance": 1.45 }
-  ]
-}
+http://127.0.0.1:8000/docs
+
+📌 Portfolio Summary
+
+This project shows that Nguakaaga can:
+
+Build embeddings + vector DB
+
+Build RAG systems
+
+Implement LangChain tools & agents
+
+Build a FastAPI backend
+
+Handle offline model loading
+
+Implement full REST API
+
+Structure an LLM engineering project professionally
+
+This is job-ready work.
+
+🎯 Next Step
+
+You are now ready for:
+
+👉 WEEK 8 — Next.js Frontend (Chat UI + File Upload + RAG Interface)
+This will complete the resume RAG application end-to-end.
