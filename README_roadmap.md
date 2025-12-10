@@ -1,4 +1,3 @@
-
 MASTER LLM ENGINEERING ROADMAP (ALL-IN-ONE DOCUMENT)**
 
 **For Nguakaaga Mvendaga — based on your background (Next.js, TypeScript, SaaS)**
@@ -146,10 +145,89 @@ Build API routes:
 9. Fine-tuned model using LoRA (on Colab GPU)
 10. Full AI SaaS Platform (capstone)
 
-Everything deployed on:
+# 📽️ Deployment & Presentation Strategy (No Paid Hosting)
 
-* **Vercel** (frontend)
-* **Render/Railway** (backend)
+Because we are not paying for OpenAI, Render, or Vercel right now, all projects will be presented like this instead of cloud deployment:
+
+1. Local Run (Developer Mode)
+   - Every project must run fully on my laptop:
+     - Backend: Python / FastAPI / scripts.
+     - Frontend: Next.js / React (where applicable).
+   - Each repo includes clear instructions:
+     - How to install dependencies.
+     - How to run backend.
+     - How to run frontend.
+     - Any environment variables (with .env.example).
+
+2. Demo Videos (Loom + YouTube) – REPLACES Render/Vercel for now
+   - For every serious project (especially the 10 roadmap projects), I will record:
+     - A 2–5 minute Loom video:
+       - Shows the app running locally.
+       - Demonstrates key features (RAG, search, agents, etc.).
+       - Includes a short architecture explanation.
+     - The same video uploaded to YouTube (Unlisted) as a backup.
+   - Each project README will contain:
+     - 🎥 Loom Demo: <LOOM_URL>
+     - 🎥 YouTube Demo (Unlisted): <YOUTUBE_URL>
+   - When I have budget for hosting (later), I can add Render/Vercel URLs without changing the core roadmap.
+
+3. GitHub as the Source of Truth
+   - Each major project gets its own GitHub repo.
+   - README includes:
+     - Project summary.
+     - Tech stack.
+     - Features.
+     - Architecture (text + optionally a simple diagram).
+     - How to run locally.
+     - Loom + YouTube demo links.
+   - Recruiters and clients can:
+     - View code.
+     - Watch the demo.
+     - Optionally run it locally if they want.
+
+---
+
+# 📱 Frontend UX Requirements (All Projects with UI)
+
+For all projects that have a frontend UI (Next.js / React / dashboards / chat UIs):
+
+1. Mobile-Responsive by Default
+   - Every UI must be usable on:
+     - Desktop (large screens).
+     - Tablets (medium screens).
+     - Mobile phones (small screens).
+   - Use responsive layouts (Tailwind, CSS grid/flex) so components stack nicely on mobile.
+
+2. Minimum UX Standard
+   - Text and buttons readable on small screens.
+   - No horizontal scrolling on mobile for main pages.
+   - Forms and chat inputs usable with touch.
+   - Navigation remains accessible (e.g. simple header or mobile menu).
+
+3. Flagship Projects (Priority for Polish)
+   - At minimum, the following will be clearly mobile-friendly and demo-ready:
+     - Embedding Search / Semantic Search UI (if built).
+     - Resume RAG Chatbot.
+     - Customer Support RAG Bot.
+     - Final AI SaaS Platform (capstone).
+   - Other smaller/internal tools still aim for basic responsiveness but without wasting time on pixel-perfect design.
+
+---
+
+# 🔁 Future Upgrade Path (When Budget Is Available)
+
+- This roadmap remains valid for skills and projects.
+- Current presentation strategy:
+  - Local run + Loom + YouTube + GitHub = default.
+- Later, when I have money for:
+  - OpenAI API credits.
+  - Paid Render/Railway instances.
+  - Optional Vercel Pro or similar.
+- I can upgrade the best 2–3 flagship projects to:
+  - Public backend (Render/Railway).
+  - Public frontend (Vercel).
+  - Live URLs added to the same READMEs without changing the core learning path.
+
 
 Then publish on **GitHub + Portfolio website**.
 

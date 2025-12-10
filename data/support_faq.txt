@@ -1,0 +1,10 @@
+FAQ: My SaaS
+
+Q: What is this platform?
+A: It is a B2B platform for XYZ.
+
+Q: How do I reset my password?
+A: Click "Forgot password" on the login page.
+
+Q: How can I contact support?
+A: Email support@example.com.

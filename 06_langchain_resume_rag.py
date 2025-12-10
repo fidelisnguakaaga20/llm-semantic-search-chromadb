@@ -16,8 +16,13 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 # ----------------------------
 
 PDF_PATH = "data/sample.pdf"  # your resume PDF
+
 EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-CHROMA_DIR = "chroma_db_langchain_resume"
+
+# /// IMPORTANT: this must match the FastAPI backend
+CHROMA_DIR = "chroma_db_resume_api"          # was: "chroma_db_langchain_resume"
+CHROMA_COLLECTION_NAME = "resume_chunks"     # explicit collection name
+
 LLM_MODEL_NAME = "gpt2"  # small local model, just to demonstrate the pipeline
 
 
@@ -63,7 +68,8 @@ def build_vectorstore(chunks):
     vectordb = Chroma.from_documents(
         documents=chunks,
         embedding=embedder,
-        persist_directory=CHROMA_DIR,
+        persist_directory=CHROMA_DIR,          # /// same dir as FastAPI
+        collection_name=CHROMA_COLLECTION_NAME # /// same collection as FastAPI
     )
 
     # For newer Chroma, persistence is automatic, but this is harmless.
@@ -72,7 +78,12 @@ def build_vectorstore(chunks):
     except Exception:
         pass
 
-    print(f"Vectorstore ready. Total vectors: {vectordb._collection.count()}")
+    try:
+        count = vectordb._collection.count()
+    except Exception:
+        count = "unknown"
+
+    print(f"Vectorstore ready. Total vectors: {count}")
     return vectordb, embedder
 
 

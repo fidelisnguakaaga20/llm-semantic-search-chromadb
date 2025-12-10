@@ -1,228 +1,188 @@
-✅ README_progress.md
 
-LLM ENGINEERING ROADMAP — PROGRESS TRACKER (Nguakaaga Mvendaga)
-STRICT • CLEAN • NO DUPLICATION • EXACTLY ALIGNED WITH MASTER PLAN
 
-📌 CURRENT STATUS
+# ✅ **COPY & PASTE THIS FOR NEXT AI (START HERE)**
 
-You have completed Month 1 and Month 2 (Weeks 5–7) of the official MASTER LLM ENGINEERING ROADMAP.
-This means you already understand and have working code for:
+**PROJECT: MASTER LLM ENGINEERING ROADMAP**
+**STATUS REPORT & EXACT HANDOFF POINT**
+**Student: Nguakaaga Mvendaga**
 
-Python basics
+---
 
-HuggingFace models
+# 🔵 **PHASE 1 — MONTH 1 (Python + Transformers + Embeddings)**
 
-Embeddings
+## ✅ **WEEK 1 — Python Basics (COMPLETED)**
 
-Vector search
+Covered:
 
-RAG
+* Variables, lists, dicts
+* Loops, functions
+* File handling
+* Jupyter Notebook
+* Scripts: `01_basics.py`, `02_files.py`
 
-LangChain tools + memory + simple agent
+Nothing skipped.
 
-FastAPI backend with full endpoints
+---
 
-You have also committed everything into Git successfully.
+## ✅ **WEEK 2 — HuggingFace Basics (COMPLETED)**
 
-🧭 ROADMAP PROGRESS (DETAILED)
-🔥 MONTH 1 — Python + Transformers + Embeddings
-✅ WEEK 1 — Python Basics (Completed)
+Covered:
 
-Files completed:
+* Loaded GPT-2 with `pipeline`
+* Tokenization
+* Text generation
+* Extracted embeddings from `hidden_states`
 
-01_basics.py
+Nothing skipped.
 
-02_files.py
-Skills demonstrated:
+---
 
-Functions
+## ✅ **WEEK 3 — Embeddings + Vector Search (COMPLETED)**
 
-Lists, dicts
+Covered:
 
-File read/write
+* SentenceTransformers: `all-MiniLM-L6-v2`
+* Chroma vector DB
+* Stored embeddings
+* Performed similarity search
+* Delivered Project 1 + README
 
-CLI execution
+Nothing skipped.
 
-✅ WEEK 2 — HuggingFace Basics (Completed)
+---
 
-Files completed:
+## ✅ **WEEK 4 — Transformer Concepts (COMPLETED)**
 
-02_hf_basics.ipynb
-Skills demonstrated:
+Covered:
 
-Loading Transformers
+* Tokenization / vocab
+* Attention basics
+* Decoder-only transformer (GPT) explanation
+* Implemented demo attention inspection
 
-Tokenization
+Nothing skipped.
 
-Generation
+---
 
-Pipeline usage
+# 🔵 **PHASE 2 — MONTH 2 (RAG + LangChain + Backend)**
 
-✅ WEEK 3 — Embeddings + Vector Search (Completed)
+## ✅ **WEEK 5 — RAG Pipeline (COMPLETED)**
 
-Files completed:
+Covered:
 
-03_embeddings_search.ipynb
+* PDF loader
+* Chunking
+* Embedding chunks
+* Vector DB indexing
+* Retrieval + generation
+* Basic RAG over resume PDF using local GPT-2
 
-03_chroma_search.py
-Skills demonstrated:
+Nothing skipped.
 
-Sentence Transformers
+---
 
-ChromaDB vector store
+## 🟡 **WEEK 6 — LangChain / LangGraph (PARTIALLY COMPLETED)**
 
-Query by similarity
+Covered:
 
-✅ WEEK 4 — Transformer Concepts (Completed)
+* LangChain loaders, chunkers, embeddings
+* LangChain Chroma integration
+* Retriever working
+* Manual RAG generation step with GPT-2
+  File: `06_langchain_resume_rag.py`
 
-Files completed:
+Skipped (to be done later):
 
-04_transformer_concepts.py
-Skills demonstrated:
+* Tools
+* Memory
+* Agents
+* Full LangChain "Chain" objects
+  Reason: **We prioritized building a full FastAPI backend + Next.js UI first, as required by Week 7/8.**
 
-Tokenization
+---
 
-Attention (basic explanation)
+## 🟡 **WEEK 7 — FastAPI Backend (PARTIALLY COMPLETED)**
 
-Decoder-only architecture (GPT-style)
+Covered:
 
-🔥 MONTH 2 — RAG + LangChain + Backend
-✅ WEEK 5 — RAG (Completed)
+* **Working FastAPI app**: `07_fastapi_rag_api.py`
+* Startup loads:
 
-Files completed:
+  * SentenceTransformer
+  * Persistent Chroma DB (`chroma_db_langchain_resume`)
+  * Local GPT-2
+* Implemented endpoints:
 
-data/05_rag_pdf_basic.py
+  * `GET /health`
+  * `POST /search`
+  * `POST /rag`
+* Responses: answer + top chunks
+* Fully tested via Swagger UI
 
-data/05_rag_pdf_chroma.py
+Skipped (next AI must continue here):
 
-Skills demonstrated:
+* `/embed`
+* `/chat` (LLM-only chat)
+* `/agent` (LangChain agent endpoint)
+  Reason: **We needed minimal backend functionality to connect the frontend first.**
 
-PDF loading
+---
 
-Text chunking
+# 🔵 **PHASE 3 — WEEK 8 (Next.js + TypeScript Frontend Integration)**
 
-Embedding large documents
+## 🟡 **WEEK 8 — Next.js Integration (PARTIALLY COMPLETED)**
 
-Building vector indexes
+Folder: `resume-rag-frontend/`
 
-Retrieval + generation logic
+Covered:
 
-✅ WEEK 6 — LangChain, Tools, Memory, Agents (Completed)
+* Next.js 16 App Router setup
+* Tailwind configured
+* `.env.local` using `NEXT_PUBLIC_RAG_API_URL=http://127.0.0.1:8000/rag`
+* `app/layout.tsx` root layout
+* `app/page.tsx` chat UI:
 
-File completed:
+  * Sends POST to `/rag`
+  * Displays answer as chat bubble
+  * Displays retrieved context (“top chunks”)
 
-08_langchain_tools_memory_agents.py
+Frontend + backend run together successfully.
 
-Features implemented:
+Skipped (next AI continues):
 
-Custom semantic search tool
+* File upload UI
+* Streaming responses from FastAPI
+* Authentication (optional per roadmap)
+* UI polish + error states
+  Reason: **The core integration was the priority; enhancements follow next.**
 
-Simple agent with routing logic
+---
 
-Memory (conversation context tracking)
+# 🟥 **EXACT HANDOFF POINT FOR NEXT AI**
 
-HuggingFace embeddings + GPT2
+Continue from **Week 7 (remaining endpoints)** and **Week 8 (remaining UI features)**:
 
-This satisfies Week 6 of roadmap 100%.
+### **1. Implement missing FastAPI endpoints:**
 
-✅ WEEK 7 — FastAPI RAG Backend (Completed)
+* `/embed` — return embedding for user-sent text
+* `/chat` — conversational endpoint (LLM-only)
+* `/agent` — LangChain agent endpoint using tools
 
-File completed:
+### **2. Implement Week 8 missing frontend features:**
 
-07_fastapi_rag_api.py
+* Add file upload (`resume.pdf`) → send to backend → re-embed
+* Add streaming responses (Server-Sent Events or fetch streaming)
+* Optional: authentication
 
-This backend includes all required API routes:
+### **3. After Week 8, proceed to Month 3 portfolio projects.**
 
-Route	Description
-GET /health	API health check
-POST /embed	Generate embeddings
-POST /search	Semantic search over resume chunks
-POST /rag	RAG answer using best chunk
-POST /chat	Free-form chat using GPT-2
-POST /agent	Simple agent that calls resume search when needed
+Everything up to this point is fully working:
 
-Additional features:
+* Local RAG pipeline
+* FastAPI backend with `/rag`
+* Next.js UI calling backend
+* Retrieved context + answer visible in chat interface
 
-Persistent ChromaDB for resume chunks
+Next AI should **continue at Week 7 (remaining endpoints)**.
 
-Offline-safe embedding model loading
 
-GPT-2 pipeline for local chat
-
-Full Swagger documentation working
-
-Successfully executed semantic search, RAG, chat, and agent endpoints
-
-This completes Week 7 exactly as defined in the MASTER ROADMAP.
-
-📌 CURRENT POSITION IN ROADMAP
-
-You are now officially at:
-
-⭐ WEEK 8 — Next.js Frontend (Pending due to slow network)
-
-Next step (once network is fast enough):
-
-Create Next.js 15 app
-
-Add Tailwind
-
-Build Chat UI
-
-Connect to FastAPI /search, /rag, /chat, /agent
-
-Add PDF upload (optional)
-
-Add streaming responses (optional)
-
-✔ The backend is ready
-✔ The RAG logic is ready
-✔ The agent logic is ready
-✔ Only the frontend is remaining
-
-📌 NEXT STEP WHILE FRONTEND IS WAITING
-
-To avoid delay while waiting for better Internet, we continue with:
-
-⭐ MONTH 3 — Portfolio AI Projects
-
-Next Python file to create:
-
-09_customer_support_rag.py
-
-
-This will be Project 3 of your portfolio.
-
-📂 PROJECT FILE TREE (As of Now)
-llm-roadmap/
-│
-├── 01_basics.py
-├── 02_files.py
-├── 02_hf_basics.ipynb
-├── 03_embeddings_search.ipynb
-├── 03_chroma_search.py
-├── 04_transformer_concepts.py
-├── 07_fastapi_rag_api.py
-├── 08_langchain_tools_memory_agents.py
-│
-├── data/
-│   ├── sample.pdf
-│   ├── 05_rag_pdf_basic.py
-│   ├── 05_rag_pdf_chroma.py
-│
-├── chroma_db/
-├── chroma_db_langchain_resume/
-├── chroma_db_resume_api/
-│
-├── README_progress.md         ← YOU ARE HERE
-├── README_project2_resume_rag.md
-├── study_plan.txt
-├── file-tree.txt
-├── test_llm.py
-└── .gitignore
-
-🎯 FINAL SUMMARY (COPY FOR NEXT AI)
-
-This project is currently at Week 8 of the MASTER LLM ENGINEERING ROADMAP.
-Weeks 1–7 are completed 100%. Backend is fully functional.
-Next step: Build Next.js frontend OR continue with Month 3 Python projects.
